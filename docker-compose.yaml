@@ -1,0 +1,44 @@
+services:
+
+  mongodb:
+    image: mongo:7
+    container_name: cloudnativehub-mongodb
+    restart: unless-stopped
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - cloudnativehub-network
+
+  server:
+    build:
+      context: ./applications/server
+    container_name: cloudnativehub-server
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      PORT: 5000
+      MONGO_URI: mongodb://mongodb:27017/cloudnativehub
+    depends_on:
+      - mongodb
+    networks:
+      - cloudnativehub-network
+
+  client:
+    build:
+      context: ./applications/client
+    container_name: cloudnativehub-client
+    restart: unless-stopped
+    ports:
+      - "5173:80"
+    depends_on:
+      - server
+    networks:
+      - cloudnativehub-network
+
+volumes:
+  mongodb_data:
+
+networks:
+  cloudnativehub-network:
+    driver: bridge
